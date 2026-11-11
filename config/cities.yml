@@ -16,3 +16,11 @@ cities:
     snapshot: "2026-09-25"
     center_lat: 37.3891
     center_lon: -5.9845
+  # City C (new client), added in week 2. Centre: Plaça de Catalunya.
+  barcelona:
+    country: spain
+    region: catalonia
+    city_slug: barcelona
+    snapshot: "2026-09-17"
+    center_lat: 41.3870
+    center_lon: 2.1701
