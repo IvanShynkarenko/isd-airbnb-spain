@@ -44,3 +44,16 @@ def test_outlier_class_zero_price(silver):
     assert rows[4] == "zero_or_tiny"
     assert rows[1] == "ok"
     assert rows[3] == "no_price"
+
+
+def test_license_class(spark):
+    from airbnb.silver import license_class
+
+    df = spark.createDataFrame([("VT-123",), ("Exempt",), ("En proceso",), ("",), (None,)], "l string")
+    got = [r[0] for r in df.select(license_class(df.l)).collect()]
+    assert got == ["registered", "exempt", "pending", "none", "none"]
+
+
+def test_silver_has_host_years(silver):
+    assert dict(silver.dtypes)["host_years"] == "int"
+    assert dict(silver.dtypes)["license_class"] == "string"

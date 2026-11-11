@@ -8,7 +8,9 @@ from __future__ import annotations
 from pyspark.sql import Column, DataFrame
 from pyspark.sql import functions as F
 
-# Provisional price bounds in EUR/night; final values and reasons come from the EDA notebook.
+# Price bounds in EUR/night (see notebooks/eda_madrid_sevilla.ipynb, section "Outliers"):
+# below 10 EUR is a placeholder, not a nightly price; above 1000 EUR are mostly listings with no
+# reviews and near-full availability (parked or mistyped prices, up to 36 883 EUR). Together < 1%.
 MIN_PRICE = 10.0
 MAX_PRICE = 1000.0
 
@@ -41,6 +43,17 @@ def parse_bathrooms(c: Column) -> tuple[Column, Column]:
     return baths, shared
 
 
+def license_class(c: Column) -> Column:
+    """registered / exempt / pending / none (the raw text is free-form)."""
+    t = F.lower(F.trim(c))
+    return (
+        F.when(t.isNull() | (t == ""), "none")
+        .when(t.startswith("exempt"), "exempt")
+        .when(t.startswith("en proceso") | t.startswith("pending"), "pending")
+        .otherwise("registered")
+    )
+
+
 def _bool(c: str) -> Column:
     return F.when(F.col(c) == "t", True).when(F.col(c) == "f", False)
 
@@ -58,7 +71,7 @@ def to_silver(bronze: DataFrame) -> DataFrame:
         "city",
         "snapshot_date",
         _num("host_id", "bigint").alias("host_id"),
-        _num("host_since", "date").alias("host_since"),
+        _num("hosts_time_as_host_years", "int").alias("host_years"),  # host_since is empty in 2026 files
         _bool("host_is_superhost").alias("host_is_superhost"),
         _bool("host_identity_verified").alias("host_identity_verified"),
         _num("host_listings_count", "int").alias("host_listings_count"),
@@ -89,8 +102,8 @@ def to_silver(bronze: DataFrame) -> DataFrame:
         _num("last_review", "date").alias("last_review"),
         *[_num(f"review_scores_{s}", "double").alias(f"review_scores_{s}") for s in REVIEW_SCORES],
         _num("reviews_per_month", "double").alias("reviews_per_month"),
-        _bool("instant_bookable").alias("instant_bookable"),
         lic.isNotNull().alias("has_license"),
+        license_class(F.col("license")).alias("license_class"),
         _num("calculated_host_listings_count", "int").alias("calculated_host_listings_count"),
         *[_num(c, "double").alias(f"leak_{c}") for c in LEAK_SOURCE_COLUMNS],
     )
