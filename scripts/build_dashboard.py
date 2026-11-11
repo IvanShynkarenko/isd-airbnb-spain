@@ -76,17 +76,14 @@ def chart(kind, ds, title, x, y, pos, color=None, horizontal=False, group=False,
 
 
 def table(ds, title, cols, pos):
-    columns = [{"fieldName": c, "displayName": c, "title": c, "type": t, "displayAs": t, "visible": True,
-                "order": 100000 + i, "alignContent": "right" if t in ("integer", "float") else "left"}
-               for i, (c, t) in enumerate(cols)]
     return {
         "widget": {
             "name": _wid("table"),
-            "queries": [{"name": "main_query", "query": {"datasetName": ds, "fields": [_field(c) for c, _ in cols],
+            "queries": [{"name": "main_query", "query": {"datasetName": ds, "fields": [_field(c) for c in cols],
                                                          "disaggregated": True}}],
-            "spec": {"version": 1, "widgetType": "table", "encodings": {"columns": columns},
-                     "frame": {"showTitle": True, "title": title}, "itemsPerPage": 15, "condensed": True,
-                     "withRowNumber": False, "invisibleColumns": [], "allowHTMLByDefault": False},
+            "spec": {"version": 2, "widgetType": "table",
+                     "encodings": {"columns": [{"fieldName": c, "displayName": c} for c in cols]},
+                     "frame": {"showTitle": True, "title": title}},
         },
         "position": dict(zip(["x", "y", "width", "height"], pos)),
     }
@@ -130,8 +127,7 @@ model = [
     chart("bar", "underpriced_neighbourhoods", "Neighbourhoods the model under-prices most (avg error, EUR)",
           ("max", "avg_error"), "neighbourhood", (3, 8, 3, 6), color="city", horizontal=True),
     table("worst_predictions", "Largest errors on the test set",
-          [("city", "string"), ("neighbourhood", "string"), ("room_type", "string"), ("accommodates", "float"),
-           ("price", "float"), ("predicted", "float"), ("error", "float"), ("direction", "string")], (0, 14, 6, 8)),
+          ["city", "neighbourhood", "room_type", "accommodates", "price", "predicted", "error", "direction"], (0, 14, 6, 8)),
 ]
 
 dash = {

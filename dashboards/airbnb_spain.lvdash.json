@@ -1138,101 +1138,48 @@
               }
             ],
             "spec": {
-              "version": 1,
+              "version": 2,
               "widgetType": "table",
               "encodings": {
                 "columns": [
                   {
                     "fieldName": "city",
-                    "displayName": "city",
-                    "title": "city",
-                    "type": "string",
-                    "displayAs": "string",
-                    "visible": true,
-                    "order": 100000,
-                    "alignContent": "left"
+                    "displayName": "city"
                   },
                   {
                     "fieldName": "neighbourhood",
-                    "displayName": "neighbourhood",
-                    "title": "neighbourhood",
-                    "type": "string",
-                    "displayAs": "string",
-                    "visible": true,
-                    "order": 100001,
-                    "alignContent": "left"
+                    "displayName": "neighbourhood"
                   },
                   {
                     "fieldName": "room_type",
-                    "displayName": "room_type",
-                    "title": "room_type",
-                    "type": "string",
-                    "displayAs": "string",
-                    "visible": true,
-                    "order": 100002,
-                    "alignContent": "left"
+                    "displayName": "room_type"
                   },
                   {
                     "fieldName": "accommodates",
-                    "displayName": "accommodates",
-                    "title": "accommodates",
-                    "type": "float",
-                    "displayAs": "float",
-                    "visible": true,
-                    "order": 100003,
-                    "alignContent": "right"
+                    "displayName": "accommodates"
                   },
                   {
                     "fieldName": "price",
-                    "displayName": "price",
-                    "title": "price",
-                    "type": "float",
-                    "displayAs": "float",
-                    "visible": true,
-                    "order": 100004,
-                    "alignContent": "right"
+                    "displayName": "price"
                   },
                   {
                     "fieldName": "predicted",
-                    "displayName": "predicted",
-                    "title": "predicted",
-                    "type": "float",
-                    "displayAs": "float",
-                    "visible": true,
-                    "order": 100005,
-                    "alignContent": "right"
+                    "displayName": "predicted"
                   },
                   {
                     "fieldName": "error",
-                    "displayName": "error",
-                    "title": "error",
-                    "type": "float",
-                    "displayAs": "float",
-                    "visible": true,
-                    "order": 100006,
-                    "alignContent": "right"
+                    "displayName": "error"
                   },
                   {
                     "fieldName": "direction",
-                    "displayName": "direction",
-                    "title": "direction",
-                    "type": "string",
-                    "displayAs": "string",
-                    "visible": true,
-                    "order": 100007,
-                    "alignContent": "left"
+                    "displayName": "direction"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
                 "title": "Largest errors on the test set"
-              },
-              "itemsPerPage": 15,
-              "condensed": true,
-              "withRowNumber": false,
-              "invisibleColumns": [],
-              "allowHTMLByDefault": false
+              }
             }
           },
           "position": {
