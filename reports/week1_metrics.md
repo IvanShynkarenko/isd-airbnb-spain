@@ -22,8 +22,8 @@ Population `all_priced` = every test listing with a price, including the outlier
 | Sevilla | all_priced | 1 526 | 74.79 | 89.22 | −16.2% | 29.57 | 26% |
 | both | all_priced | 5 320 | 68.43 | 85.08 | −19.6% | 27.06 | 26% |
 
-The 47 outliers in the test set (0.9%) add about 19 EUR to the MAE: one 36 883 EUR listing alone is worth
-almost 7 EUR of MAE in Madrid. The typical error (median) is about 27 EUR.
+The 47 outlier listings in the test set (0.9%) add about 19 EUR to the combined MAE (68.4 vs 49.7): a few
+listings priced at thousands of EUR dominate an average. The typical error (median) is about 27 EUR either way.
 
 ## What drives the predictions (permutation importance, MAE increase in EUR when shuffled)
 
