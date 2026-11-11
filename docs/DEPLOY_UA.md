@@ -130,7 +130,7 @@ FROM workspace.airbnb_gold.model_metrics ORDER BY population DESC, city;
 |---|---|
 | What is the median price of entire homes in City A? | Madrid ≈ 174 EUR |
 | Which neighbourhoods in City B have the most listings? | Alfalfa (938), Santa Cruz (688), Arenal (656)… |
-| Where does the model under-price listings the most? | El Viso, Castellana, Jerónimos (Madrid); Triana Oeste (Sevilla) |
+| Where does the model under-price listings the most? | El Viso (−105), Castellana (−102), Jerónimos (−94) у Madrid; Triana Oeste (−55) у Sevilla |
 
 Якщо відповідь інша, натисніть **Show code** під відповіддю, скопіюйте SQL і надішліть мені.
 

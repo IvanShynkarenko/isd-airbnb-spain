@@ -47,13 +47,13 @@ If a question is ambiguous about the city, answer for each city separately.
 Add the three queries from `genie/example_questions.sql` under **Instructions → SQL queries**, each with its question
 as the title. Genie copies their patterns (the city mapping, the test-set filter, the minimum count).
 
-## Expected answers (Madrid/Sevilla week-1 run)
+## Expected answers (Databricks week-1 run, model v1; verified in the Genie Agent)
 
 | question | expected |
 |---|---|
 | What is the median price of entire homes in City A? | Madrid: about 174 EUR (173.63) |
 | Which neighbourhoods in City B have the most listings? | Alfalfa 938, Santa Cruz 688, Arenal 656, San Bartolomé 637, Feria 576 |
-| Where does the model under-price listings the most? | Madrid's El Viso (−104 EUR avg), Castellana (−103), Jerónimos (−99); in Sevilla, Triana Oeste (−56) |
+| Where does the model under-price listings the most? | Madrid's El Viso (−105 EUR avg), Castellana (−102), Jerónimos (−94); in Sevilla, Triana Oeste (−55) |
 
 ## Tricks used (for the presentation)
 
