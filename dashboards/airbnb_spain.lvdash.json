@@ -825,7 +825,7 @@
             "name": "text_14",
             "multilineTextboxSpec": {
               "lines": [
-                "# The model cuts the error by a quarter in Madrid and Sevilla; in Barcelona it only worked after retraining with Barcelona data (EUR 81 -> 48)\n",
+                "# A quarter better than the baseline at home; Barcelona needed its own data (MAE EUR 81 -> 48)\n",
                 "Test set: 20% of listings per city, never used for training or model choice. Baseline = median price for the same room type and number of guests. Charts use test listings priced EUR 10-1000 (99% of priced listings); on all priced listings, outliers included, the MAE is EUR 68 vs EUR 85."
               ]
             }
