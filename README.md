@@ -39,7 +39,7 @@ for the baseline. Details: [reports/week1_metrics.md](reports/week1_metrics.md).
 | [genie/](genie/) | Genie Agent instructions, example SQL, table comments |
 | [reports/](reports/) | Model results; the city C report is added in week 2 |
 | [docs/DEPLOY_UA.md](docs/DEPLOY_UA.md) | Step-by-step deployment guide for the team (Ukrainian) |
-| [docs/design.md](docs/design.md), [docs/assignment.pdf](docs/assignment.pdf) | Design decisions (Ukrainian) and the assignment brief |
+| [docs/assignment.pdf](docs/assignment.pdf) | The assignment brief |
 | [tests/](tests/) | Unit tests (`uv run pytest`) |
 
 ## Run on Databricks
