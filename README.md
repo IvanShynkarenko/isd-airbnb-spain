@@ -18,11 +18,11 @@ cities, a price model, an AI/BI dashboard and a Genie Agent — then a third cli
 | | model MAE | baseline MAE | improvement |
 |---|---:|---:|---:|
 | Madrid | 49.9 EUR | 67.1 EUR | −26% |
-| Sevilla | 49.1 EUR | 63.4 EUR | −22% |
-| both | 49.7 EUR | 66.0 EUR | −25% |
+| Sevilla | 49.0 EUR | 63.4 EUR | −23% |
+| both | 49.6 EUR | 66.0 EUR | −25% |
 
 Listings priced 10–1000 EUR/night (99% of priced listings). Including outliers, the MAE is 68.4 EUR vs 85.1 EUR
-for the baseline. Details: [reports/week1_metrics.md](reports/week1_metrics.md).
+for the baseline. Numbers from the Databricks run (model v1). Details: [reports/week1_metrics.md](reports/week1_metrics.md).
 
 ## Repository
 
