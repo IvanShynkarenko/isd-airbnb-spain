@@ -1,0 +1,26 @@
+[project]
+name = "isd-airbnb-spain"
+version = "0.1.0"
+description = "Team ISD - Airbnb Spain lakehouse, price model and city-transfer study"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pyspark>=4.0,<4.1",
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "scikit-learn>=1.5",
+    "pyyaml>=6",
+    "matplotlib>=3.9",
+    "jupyter>=1.1",
+    "nbconvert>=7",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.uv]
+package = false

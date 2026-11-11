@@ -1,0 +1,18 @@
+# One entry per city. Adding a city = adding an entry here; no code changes.
+# Path segments follow https://data.insideairbnb.com/<country>/<region>/<city_slug>/<snapshot>/data/
+# center_* = city centre used for the distance feature (Madrid: Puerta del Sol; Sevilla: Plaza Nueva).
+cities:
+  madrid:
+    country: spain
+    region: comunidad-de-madrid
+    city_slug: madrid
+    snapshot: "2026-09-17"
+    center_lat: 40.4168
+    center_lon: -3.7038
+  sevilla:
+    country: spain
+    region: andalucía
+    city_slug: sevilla
+    snapshot: "2026-09-25"
+    center_lat: 37.3891
+    center_lon: -5.9845
