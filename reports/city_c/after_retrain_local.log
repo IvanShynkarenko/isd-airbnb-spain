@@ -1,0 +1,21 @@
+WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+26/11/11 22:56:39 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[Stage 0:>                                                          (0 + 1) / 1]                                                                                [Stage 1:>                                                          (0 + 3) / 3]                                                                                [Stage 2:>                                                          (0 + 4) / 4][Stage 2:=============================>                             (2 + 2) / 4]                                                                                CV MAE on train (EUR): {'hgb': 50.0, 'ridge': 58.25, 'chosen': 'hgb', 'n_train': 30807}
+WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+26/11/11 22:57:52 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[Stage 0:>                                                          (0 + 1) / 1]                                                                                [Stage 1:===================>                                       (1 + 2) / 3]                                                                                [Stage 4:>                                                          (0 + 4) / 4]                                                                                  city population    n  mae_model  mae_baseline  median_ae_model  mape_model  improvement_vs_baseline_pct model_version  unseen_room_type_share  unseen_property_type_share  unseen_neighbourhood_share  unseen_license_class_share
+madrid         ok 3763      50.04         66.85            26.19        0.27                        25.15         local                     0.0                         0.0                         0.0                         0.0
+madrid all_priced 3794      66.09         83.09            26.56        0.27                        20.46         local                     0.0                         0.0                         0.0                         0.0
+   city population    n  mae_model  mae_baseline  median_ae_model  mape_model  improvement_vs_baseline_pct model_version  unseen_room_type_share  unseen_property_type_share  unseen_neighbourhood_share  unseen_license_class_share
+sevilla         ok 1510      49.79         65.11            30.04        0.26                        23.54         local                     0.0                         0.0                         0.0                         0.0
+sevilla all_priced 1526      75.44         90.81            30.60        0.26                        16.92         local                     0.0                         0.0                         0.0                         0.0
+     city population    n  mae_model  mae_baseline  median_ae_model  mape_model  improvement_vs_baseline_pct model_version  unseen_room_type_share  unseen_property_type_share  unseen_neighbourhood_share  unseen_license_class_share
+barcelona         ok 2505      47.74         82.74            25.67        0.23                        42.30         local                     0.0                         0.0                         0.0                         0.0
+barcelona all_priced 2575      82.58        123.36            26.92        0.24                        33.06         local                     0.0                         0.0                         0.0                         0.0
+EXIT 0
