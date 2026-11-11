@@ -1,0 +1,11 @@
+data/
+.venv/
+__pycache__/
+*.pyc
+local_lake/
+mlruns/
+spark-warehouse/
+metastore_db/
+derby.log
+.pytest_cache/
+.ipynb_checkpoints/
