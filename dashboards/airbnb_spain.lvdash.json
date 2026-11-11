@@ -1,0 +1,1248 @@
+{
+  "datasets": [
+    {
+      "name": "city_metrics",
+      "displayName": "city_metrics",
+      "queryLines": [
+        "SELECT city, listings, listings_with_price, median_price, median_price_entire_home, median_price_private_room,\n",
+        "       avg_availability_365, avg_review_score, hosts, share_multi_listing_hosts, share_without_price,\n",
+        "       share_registered_license\n",
+        "FROM workspace.airbnb_gold.city_metrics\n"
+      ]
+    },
+    {
+      "name": "room_mix",
+      "displayName": "room_mix",
+      "queryLines": [
+        "SELECT city, room_type, share\n",
+        "FROM workspace.airbnb_gold.city_metrics\n",
+        "LATERAL VIEW stack(4, 'Entire home/apt', share_entire_home, 'Private room', share_private_room,\n",
+        "                      'Shared room', share_shared_room, 'Hotel room', share_hotel_room) s AS room_type, share\n"
+      ]
+    },
+    {
+      "name": "neighbourhoods",
+      "displayName": "neighbourhoods",
+      "queryLines": [
+        "SELECT city, neighbourhood, neighbourhood_group, listings, listings_with_price, median_price, avg_review_score\n",
+        "FROM workspace.airbnb_gold.neighbourhood_metrics\n",
+        "WHERE listings_with_price >= 20\n"
+      ]
+    },
+    {
+      "name": "top_neighbourhoods",
+      "displayName": "top_neighbourhoods",
+      "queryLines": [
+        "SELECT city, neighbourhood, median_price, listings\n",
+        "FROM (\n",
+        "  SELECT city, neighbourhood, median_price, listings,\n",
+        "         ROW_NUMBER() OVER (PARTITION BY city ORDER BY median_price DESC) AS rn\n",
+        "  FROM workspace.airbnb_gold.neighbourhood_metrics\n",
+        "  WHERE listings_with_price >= 20\n",
+        ") WHERE rn <= 10\n"
+      ]
+    },
+    {
+      "name": "underpriced_neighbourhoods",
+      "displayName": "underpriced_neighbourhoods",
+      "queryLines": [
+        "SELECT city, neighbourhood, COUNT(*) AS test_listings, AVG(error) AS avg_error\n",
+        "FROM workspace.airbnb_gold.predictions\n",
+        "WHERE split = 'test' AND outlier_class = 'ok'\n",
+        "GROUP BY city, neighbourhood\n",
+        "HAVING COUNT(*) >= 15\n",
+        "ORDER BY avg_error ASC\n",
+        "LIMIT 12\n"
+      ]
+    },
+    {
+      "name": "listings_ok",
+      "displayName": "listings_ok",
+      "queryLines": [
+        "SELECT city, room_type, accommodates, price,\n",
+        "       CASE WHEN minimum_nights >= 30 THEN '30+ nights (mid-term)' ELSE 'under 30 nights' END AS stay_type,\n",
+        "       availability_365, review_scores_rating\n",
+        "FROM workspace.airbnb_silver.listings\n",
+        "WHERE outlier_class = 'ok'\n"
+      ]
+    },
+    {
+      "name": "model_vs_baseline",
+      "displayName": "model_vs_baseline",
+      "queryLines": [
+        "SELECT city, predictor, mae\n",
+        "FROM workspace.airbnb_gold.model_metrics\n",
+        "LATERAL VIEW stack(2, 'model', mae_model, 'baseline (room type x guests)', mae_baseline) s AS predictor, mae\n",
+        "WHERE population = 'ok'\n"
+      ]
+    },
+    {
+      "name": "test_predictions",
+      "displayName": "test_predictions",
+      "queryLines": [
+        "SELECT city, id, neighbourhood, room_type, accommodates, price, predicted_price, baseline_price, error, abs_error\n",
+        "FROM workspace.airbnb_gold.predictions\n",
+        "WHERE split = 'test' AND outlier_class = 'ok'\n"
+      ]
+    },
+    {
+      "name": "worst_predictions",
+      "displayName": "worst_predictions",
+      "queryLines": [
+        "SELECT city, id, neighbourhood, room_type, accommodates,\n",
+        "       ROUND(price, 0) AS price, ROUND(predicted_price, 0) AS predicted, ROUND(error, 0) AS error,\n",
+        "       CASE WHEN error < 0 THEN 'under-priced' ELSE 'over-priced' END AS direction\n",
+        "FROM workspace.airbnb_gold.predictions\n",
+        "WHERE split = 'test' AND outlier_class = 'ok'\n",
+        "ORDER BY abs_error DESC\n",
+        "LIMIT 30\n"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "overview",
+      "displayName": "City overview",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "text_1",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Madrid has 2.8x more listings than Sevilla, but a typical night costs about the same: EUR 151 vs EUR 158\n",
+                "Inside Airbnb snapshots: Madrid 2026-09-17, Sevilla 2026-09-25. Prices in EUR per night."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_2",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_metrics",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "sum(listings)",
+                      "expression": "SUM(`listings`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                },
+                "y": {
+                  "fieldName": "sum(listings)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "sum(listings)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Listings per city"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_3",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_metrics",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "max(median_price)",
+                      "expression": "MAX(`median_price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                },
+                "y": {
+                  "fieldName": "max(median_price)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "max(median_price)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Median nightly price (EUR)"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_4",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_metrics",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "sum(hosts)",
+                      "expression": "SUM(`hosts`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                },
+                "y": {
+                  "fieldName": "sum(hosts)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "sum(hosts)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Hosts per city"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_5",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "room_mix",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "sum(share)",
+                      "expression": "SUM(`share`)"
+                    },
+                    {
+                      "name": "room_type",
+                      "expression": "`room_type`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                },
+                "y": {
+                  "fieldName": "sum(share)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "sum(share)"
+                },
+                "color": {
+                  "fieldName": "room_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "room_type"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Room-type mix (share of listings)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_6",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_metrics",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "max(avg_availability_365)",
+                      "expression": "MAX(`avg_availability_365`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                },
+                "y": {
+                  "fieldName": "max(avg_availability_365)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "max(avg_availability_365)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Average days available in the next 365"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 7,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_7",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_metrics",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "max(avg_review_score)",
+                      "expression": "MAX(`avg_review_score`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                },
+                "y": {
+                  "fieldName": "max(avg_review_score)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "max(avg_review_score)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Average review score (0-5)"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 7,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_8",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "top_neighbourhoods",
+                  "fields": [
+                    {
+                      "name": "max(median_price)",
+                      "expression": "MAX(`median_price`)"
+                    },
+                    {
+                      "name": "neighbourhood",
+                      "expression": "`neighbourhood`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "max(median_price)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "max(median_price)"
+                },
+                "y": {
+                  "fieldName": "neighbourhood",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "neighbourhood"
+                },
+                "color": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Most expensive neighbourhoods (median EUR, >= 20 priced listings)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 6,
+            "height": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare",
+      "displayName": "Madrid vs Sevilla",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "text_9",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Same price level, different market: 29% of Madrid listings are private rooms and 12% are mid-term rentals; Sevilla is 86% entire homes\n",
+                "Prices: listings between EUR 10 and EUR 1000 (99% of priced listings)."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_10",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "listings_ok",
+                  "fields": [
+                    {
+                      "name": "room_type",
+                      "expression": "`room_type`"
+                    },
+                    {
+                      "name": "median(price)",
+                      "expression": "MEDIAN(`price`)"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "room_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "room_type"
+                },
+                "y": {
+                  "fieldName": "median(price)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "median(price)"
+                },
+                "color": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Median price by room type (EUR)"
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "line_11",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "listings_ok",
+                  "fields": [
+                    {
+                      "name": "accommodates",
+                      "expression": "`accommodates`"
+                    },
+                    {
+                      "name": "median(price)",
+                      "expression": "MEDIAN(`price`)"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "accommodates",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "accommodates"
+                },
+                "y": {
+                  "fieldName": "median(price)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "median(price)"
+                },
+                "color": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Median price by number of guests (EUR)"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_12",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "listings_ok",
+                  "fields": [
+                    {
+                      "name": "stay_type",
+                      "expression": "`stay_type`"
+                    },
+                    {
+                      "name": "median(price)",
+                      "expression": "MEDIAN(`price`)"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "stay_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "stay_type"
+                },
+                "y": {
+                  "fieldName": "median(price)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "median(price)"
+                },
+                "color": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Mid-term (30+ night) rentals are much cheaper per night"
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_13",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_metrics",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "max(share_registered_license)",
+                      "expression": "MAX(`share_registered_license`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                },
+                "y": {
+                  "fieldName": "max(share_registered_license)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "max(share_registered_license)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Share of listings with a registered licence"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 8,
+            "width": 3,
+            "height": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "model",
+      "displayName": "Model",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "text_14",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# The model cuts the error by a quarter vs the baseline (MAE EUR 50 vs EUR 66) but under-prices expensive homes\n",
+                "Test set: 20% of listings per city, never used for training or model choice. Baseline = median price for the same room type and number of guests."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_15",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "model_vs_baseline",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "max(mae)",
+                      "expression": "MAX(`mae`)"
+                    },
+                    {
+                      "name": "predictor",
+                      "expression": "`predictor`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                },
+                "y": {
+                  "fieldName": "max(mae)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "max(mae)"
+                },
+                "color": {
+                  "fieldName": "predictor",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "predictor"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "MAE on the test set (EUR, lower is better)"
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "scatter_16",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "test_predictions",
+                  "fields": [
+                    {
+                      "name": "price",
+                      "expression": "`price`"
+                    },
+                    {
+                      "name": "predicted_price",
+                      "expression": "`predicted_price`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "price",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "price"
+                },
+                "y": {
+                  "fieldName": "predicted_price",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "predicted_price"
+                },
+                "color": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Predicted vs actual price (test set)"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_17",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "test_predictions",
+                  "fields": [
+                    {
+                      "name": "room_type",
+                      "expression": "`room_type`"
+                    },
+                    {
+                      "name": "avg(error)",
+                      "expression": "AVG(`error`)"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "room_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "room_type"
+                },
+                "y": {
+                  "fieldName": "avg(error)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "avg(error)"
+                },
+                "color": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Average error by room type (EUR, < 0 = under-priced)"
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_18",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "underpriced_neighbourhoods",
+                  "fields": [
+                    {
+                      "name": "max(avg_error)",
+                      "expression": "MAX(`avg_error`)"
+                    },
+                    {
+                      "name": "neighbourhood",
+                      "expression": "`neighbourhood`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "max(avg_error)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "max(avg_error)"
+                },
+                "y": {
+                  "fieldName": "neighbourhood",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "neighbourhood"
+                },
+                "color": {
+                  "fieldName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "city"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Neighbourhoods the model under-prices most (avg error, EUR)"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 8,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "table_19",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "worst_predictions",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "neighbourhood",
+                      "expression": "`neighbourhood`"
+                    },
+                    {
+                      "name": "room_type",
+                      "expression": "`room_type`"
+                    },
+                    {
+                      "name": "accommodates",
+                      "expression": "`accommodates`"
+                    },
+                    {
+                      "name": "price",
+                      "expression": "`price`"
+                    },
+                    {
+                      "name": "predicted",
+                      "expression": "`predicted`"
+                    },
+                    {
+                      "name": "error",
+                      "expression": "`error`"
+                    },
+                    {
+                      "name": "direction",
+                      "expression": "`direction`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "city",
+                    "displayName": "city",
+                    "title": "city",
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "alignContent": "left"
+                  },
+                  {
+                    "fieldName": "neighbourhood",
+                    "displayName": "neighbourhood",
+                    "title": "neighbourhood",
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100001,
+                    "alignContent": "left"
+                  },
+                  {
+                    "fieldName": "room_type",
+                    "displayName": "room_type",
+                    "title": "room_type",
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100002,
+                    "alignContent": "left"
+                  },
+                  {
+                    "fieldName": "accommodates",
+                    "displayName": "accommodates",
+                    "title": "accommodates",
+                    "type": "float",
+                    "displayAs": "float",
+                    "visible": true,
+                    "order": 100003,
+                    "alignContent": "right"
+                  },
+                  {
+                    "fieldName": "price",
+                    "displayName": "price",
+                    "title": "price",
+                    "type": "float",
+                    "displayAs": "float",
+                    "visible": true,
+                    "order": 100004,
+                    "alignContent": "right"
+                  },
+                  {
+                    "fieldName": "predicted",
+                    "displayName": "predicted",
+                    "title": "predicted",
+                    "type": "float",
+                    "displayAs": "float",
+                    "visible": true,
+                    "order": 100005,
+                    "alignContent": "right"
+                  },
+                  {
+                    "fieldName": "error",
+                    "displayName": "error",
+                    "title": "error",
+                    "type": "float",
+                    "displayAs": "float",
+                    "visible": true,
+                    "order": 100006,
+                    "alignContent": "right"
+                  },
+                  {
+                    "fieldName": "direction",
+                    "displayName": "direction",
+                    "title": "direction",
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100007,
+                    "alignContent": "left"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Largest errors on the test set"
+              },
+              "itemsPerPage": 15,
+              "condensed": true,
+              "withRowNumber": false,
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 6,
+            "height": 8
+          }
+        }
+      ]
+    }
+  ]
+}
