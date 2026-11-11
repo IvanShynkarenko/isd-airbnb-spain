@@ -52,6 +52,7 @@ listings are mid-term stays, every neighbourhood unseen). Full story and the lis
 | [genie/](genie/) | Genie Agent instructions, example SQL, table comments |
 | [reports/](reports/) | Week-1 model results and the city C report with run records |
 | [docs/DEPLOY_UA.md](docs/DEPLOY_UA.md) | Step-by-step deployment guide for the team (Ukrainian) |
+| [presentation/isd_airbnb_spain.pdf](presentation/isd_airbnb_spain.pdf) | Presentation (PDF; editable [.pptx](presentation/isd_airbnb_spain.pptx)) |
 | [docs/assignment.pdf](docs/assignment.pdf) | The assignment brief |
 | [tests/](tests/) | Unit tests (`uv run pytest`) |
 

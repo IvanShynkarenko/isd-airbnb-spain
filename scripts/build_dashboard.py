@@ -135,9 +135,9 @@ model = [
 dash = {
     "datasets": datasets(),
     "pages": [
-        {"name": "overview", "displayName": "City overview", "pageType": "PAGE_TYPE_CANVAS", "layout": overview},
-        {"name": "compare", "displayName": "Madrid vs Sevilla", "pageType": "PAGE_TYPE_CANVAS", "layout": compare},
-        {"name": "model", "displayName": "Model", "pageType": "PAGE_TYPE_CANVAS", "layout": model},
+        {"name": "overview", "displayName": "City overview", "layout": overview, "pageType": "PAGE_TYPE_CANVAS"},
+        {"name": "compare", "displayName": "Madrid vs Sevilla", "layout": compare, "pageType": "PAGE_TYPE_CANVAS"},
+        {"name": "model", "displayName": "Model", "layout": model, "pageType": "PAGE_TYPE_CANVAS"},
     ],
 }
 out = ROOT / "dashboards" / "airbnb_spain.lvdash.json"
