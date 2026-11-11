@@ -59,3 +59,12 @@ FROM workspace.airbnb_gold.predictions
 WHERE split = 'test' AND outlier_class = 'ok'
 ORDER BY abs_error DESC
 LIMIT 30;
+
+-- name: city_c_runs
+-- model_metrics keeps only the latest model per city, so the first-run numbers come from reports/city_c.md
+SELECT * FROM VALUES
+  ('1. first run (v1, unchanged)', 'baseline (Madrid + Sevilla medians)', 85.02),
+  ('1. first run (v1, unchanged)', 'model', 80.65),
+  ('2. after retrain with Barcelona (v2)', 'baseline (Barcelona own medians)', 81.16),
+  ('2. after retrain with Barcelona (v2)', 'model', 47.85)
+  AS t(stage, predictor, mae);

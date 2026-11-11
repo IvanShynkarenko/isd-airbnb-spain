@@ -97,6 +97,18 @@
         "ORDER BY abs_error DESC\n",
         "LIMIT 30\n"
       ]
+    },
+    {
+      "name": "city_c_runs",
+      "displayName": "city_c_runs",
+      "queryLines": [
+        "SELECT * FROM VALUES\n",
+        "  ('1. first run (v1, unchanged)', 'baseline (Madrid + Sevilla medians)', 85.02),\n",
+        "  ('1. first run (v1, unchanged)', 'model', 80.65),\n",
+        "  ('2. after retrain with Barcelona (v2)', 'baseline (Barcelona own medians)', 81.16),\n",
+        "  ('2. after retrain with Barcelona (v2)', 'model', 47.85)\n",
+        "  AS t(stage, predictor, mae)\n"
+      ]
     }
   ],
   "pages": [
@@ -813,7 +825,7 @@
             "name": "text_14",
             "multilineTextboxSpec": {
               "lines": [
-                "# The model cuts the error by a quarter vs the baseline (MAE EUR 50 vs EUR 66) but under-prices expensive homes\n",
+                "# The model cuts the error by a quarter in Madrid and Sevilla; in Barcelona it only worked after retraining with Barcelona data (EUR 81 -> 48)\n",
                 "Test set: 20% of listings per city, never used for training or model choice. Baseline = median price for the same room type and number of guests. Charts use test listings priced EUR 10-1000 (99% of priced listings); on all priced listings, outliers included, the MAE is EUR 68 vs EUR 85."
               ]
             }
@@ -1093,7 +1105,75 @@
         },
         {
           "widget": {
-            "name": "table_19",
+            "name": "bar_19",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_c_runs",
+                  "fields": [
+                    {
+                      "name": "stage",
+                      "expression": "`stage`"
+                    },
+                    {
+                      "name": "max(mae)",
+                      "expression": "MAX(`mae`)"
+                    },
+                    {
+                      "name": "predictor",
+                      "expression": "`predictor`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "stage",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "stage"
+                },
+                "y": {
+                  "fieldName": "max(mae)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "max(mae)"
+                },
+                "color": {
+                  "fieldName": "predictor",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "predictor"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Barcelona (new client): test MAE before and after the model change, EUR"
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 22,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "table_20",
             "queries": [
               {
                 "name": "main_query",

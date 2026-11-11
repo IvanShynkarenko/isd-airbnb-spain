@@ -114,7 +114,7 @@ compare = [
           (3, 8, 3, 6)),
 ]
 model = [
-    text("# The model cuts the error by a quarter vs the baseline (MAE EUR 50 vs EUR 66) but under-prices expensive homes\n"
+    text("# The model cuts the error by a quarter in Madrid and Sevilla; in Barcelona it only worked after retraining with Barcelona data (EUR 81 -> 48)\n"
          "Test set: 20% of listings per city, never used for training or model choice. Baseline = median price for the same "
          "room type and number of guests. Charts use test listings priced EUR 10-1000 (99% of priced listings); "
          "on all priced listings, outliers included, the MAE is EUR 68 vs EUR 85.", 0, 0),
@@ -126,6 +126,8 @@ model = [
           (0, 8, 3, 6), color="city", group=True),
     chart("bar", "underpriced_neighbourhoods", "Neighbourhoods the model under-prices most (avg error, EUR)",
           ("max", "avg_error"), "neighbourhood", (3, 8, 3, 6), color="city", horizontal=True),
+    chart("bar", "city_c_runs", "Barcelona (new client): test MAE before and after the model change, EUR", "stage", ("max", "mae"),
+          (0, 22, 6, 6), color="predictor", group=True),
     table("worst_predictions", "Largest errors on the test set",
           ["city", "neighbourhood", "room_type", "accommodates", "price", "predicted", "error", "direction"], (0, 14, 6, 8)),
 ]

@@ -8,7 +8,7 @@ cities, a price model, an AI/BI dashboard and a Genie Agent — then a third cli
 | Region | **Spain** (EUR) |
 | City A (training) | **Madrid** — snapshot **2026-09-17** |
 | City B (training) | **Sevilla** — snapshot **2026-09-25** |
-| City C (new client) | **Barcelona** — snapshot date recorded in week 2 (kept unseen until then) |
+| City C (new client) | **Barcelona** — snapshot **2026-09-17** (opened only after tag `week1-final`) |
 | Why Barcelona | _(edit to match the sentence posted in Teams)_ Spain's other big Airbnb market, with strict licensing and a different neighbourhood structure: the hardest realistic test of whether a Madrid+Sevilla pipeline is a product or a prototype. |
 | Data | [Inside Airbnb](https://insideairbnb.com/get-the-data/) `listings.csv.gz` (CC BY 4.0) |
 | Platform | Databricks Free Edition (serverless, Unity Catalog `workspace`), zero cost |
@@ -24,6 +24,19 @@ cities, a price model, an AI/BI dashboard and a Genie Agent — then a third cli
 Listings priced 10–1000 EUR/night (99% of priced listings). Including outliers, the MAE is 68.4 EUR vs 85.1 EUR
 for the baseline. Numbers from the Databricks run (model v1). Details: [reports/week1_metrics.md](reports/week1_metrics.md).
 
+## City C: Barcelona
+
+| test MAE, EUR (price 10–1000) | |
+|---|---:|
+| Baseline on Barcelona (Madrid + Sevilla medians) | 85.02 |
+| Model on Madrid + Sevilla (v1) | 49.64 |
+| Model on Barcelona, first run (v1, unchanged) | 80.65 |
+| Model on Barcelona after retraining with Barcelona's training split (v2) | 47.85 |
+
+The unchanged pipeline ran on Barcelona without a failure; the model did not transfer (a higher price level, a third of
+listings are mid-term stays, every neighbourhood unseen). Full story and the list of changes:
+[reports/city_c.md](reports/city_c.md).
+
 ## Repository
 
 | path | what |
@@ -37,7 +50,7 @@ for the baseline. Numbers from the Databricks run (model v1). Details: [reports/
 | [notebooks/06_train.py](notebooks/06_train.py), [07_score.py](notebooks/07_score.py) | Train on the training cities (MLflow + UC registry), score any city |
 | [dashboards/](dashboards/) | AI/BI dashboard (`airbnb_spain.lvdash.json`) and its SQL datasets |
 | [genie/](genie/) | Genie Agent instructions, example SQL, table comments |
-| [reports/](reports/) | Model results; the city C report is added in week 2 |
+| [reports/](reports/) | Week-1 model results and the city C report with run records |
 | [docs/DEPLOY_UA.md](docs/DEPLOY_UA.md) | Step-by-step deployment guide for the team (Ukrainian) |
 | [docs/assignment.pdf](docs/assignment.pdf) | The assignment brief |
 | [tests/](tests/) | Unit tests (`uv run pytest`) |
