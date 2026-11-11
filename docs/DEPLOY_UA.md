@@ -70,9 +70,11 @@
 **SQL Editor** → виконайте:
 
 ```sql
-SELECT city, COUNT(*) AS listings FROM workspace.airbnb_silver.listings GROUP BY city ORDER BY city;
+SELECT city, COUNT(*) AS listings, COUNT(id) AS with_id,
+       ROUND(AVG(CASE WHEN split = 'test' THEN 1 ELSE 0 END), 3) AS test_share
+FROM workspace.airbnb_gold.features GROUP BY city ORDER BY city;
 ```
-Очікується: `madrid 23109`, `sevilla 8375`.
+Очікується: `madrid 23109 23109 ≈0.20`, `sevilla 8375 8375 ≈0.20`. Тобто `listings` = `with_id`, а `test_share` між 0.18 і 0.22.
 
 ```sql
 SELECT city, population, n, ROUND(mae_model, 2) AS mae_model, ROUND(mae_baseline, 2) AS mae_baseline, model_version

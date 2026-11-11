@@ -68,3 +68,15 @@ def test_guarded_cast_without_try_cast(spark):
     assert [r[0] for r in df.select(_guarded_cast(df.v, "int")).collect()] == [12, None, None, None, None]
     got = [r[0] for r in df.select(_guarded_cast(df.v, "date")).collect()]
     assert [str(g) if g else None for g in got] == [None, None, None, None, "2026-09-17"]
+
+
+def test_guarded_cast_integral_ranges(spark):
+    """Airbnb ids have 19 digits; int columns hold values like 2147483647. Out-of-range -> null, never an error."""
+    from airbnb.silver import _guarded_cast
+
+    df = spark.createDataFrame([("1234567890123456789",), ("9223372036854775807",), ("9223372036854775808",),
+                                ("2147483647",), ("2147483648",), (" 42 ",)], "v string")
+    assert [r[0] for r in df.select(_guarded_cast(df.v, "bigint")).collect()] == [
+        1234567890123456789, 9223372036854775807, None, 2147483647, 2147483648, 42]
+    assert [r[0] for r in df.select(_guarded_cast(df.v, "int")).collect()] == [
+        None, None, None, 2147483647, None, 42]

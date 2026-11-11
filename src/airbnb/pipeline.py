@@ -1,12 +1,20 @@
 """Per-city ETL orchestration shared by Databricks notebooks and the local runner."""
 from __future__ import annotations
 
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
 
 from airbnb import bronze, features, gold, io, silver
 from airbnb.config import CityConfig
 from airbnb.ingest import ensure_raw_file
 from airbnb.paths import BRONZE, GOLD_CITY, GOLD_FEATURES, GOLD_NEIGH, SILVER
+
+
+def check_silver(df: DataFrame) -> None:
+    """Fail loudly instead of writing listings that cannot be split, joined or scored."""
+    total = df.count()
+    missing = df.filter("id IS NULL").count()
+    if missing:
+        raise ValueError(f"{missing} of {total} listings have no id after parsing; check the id column / cast")
 
 
 def run_city_etl(
@@ -23,7 +31,9 @@ def run_city_etl(
         counts["bronze"] = io.read_table(spark, BRONZE, mode).filter(f"city = '{c.name}'").count()
     if "silver" in stages:
         b = io.read_table(spark, BRONZE, mode).filter(f"city = '{c.name}'")
-        io.write_city(silver.to_silver(b), SILVER, c.name, mode)
+        s_df = silver.to_silver(b)
+        check_silver(s_df)
+        io.write_city(s_df, SILVER, c.name, mode)
         counts["silver"] = io.read_table(spark, SILVER, mode).filter(f"city = '{c.name}'").count()
     if "gold" in stages or "features" in stages:
         s = io.read_table(spark, SILVER, mode).filter(f"city = '{c.name}'")

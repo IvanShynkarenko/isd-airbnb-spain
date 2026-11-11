@@ -31,3 +31,15 @@ def test_run_city_etl_all_stages(spark, tmp_path, monkeypatch, madrid):
     assert read_table(spark, GOLD_FEATURES, "local").count() == 6
     assert read_table(spark, GOLD_CITY, "local").count() == 1
     assert read_table(spark, GOLD_NEIGH, "local").count() == 1
+
+
+def test_check_silver_rejects_null_ids(spark):
+    import pytest
+
+    from airbnb.pipeline import check_silver
+
+    good = spark.createDataFrame([(1, "madrid"), (2, "madrid")], "id long, city string")
+    check_silver(good)
+    bad = spark.createDataFrame([(1, "madrid"), (None, "madrid")], "id long, city string")
+    with pytest.raises(ValueError, match="1 of 2 listings have no id"):
+        check_silver(bad)

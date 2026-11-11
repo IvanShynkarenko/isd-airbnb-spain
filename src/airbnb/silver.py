@@ -23,14 +23,22 @@ LEAK_SOURCE_COLUMNS = ["price_quote_price_per_night", "estimated_revenue_l365d",
 
 _PATTERNS = {
     "double": r"^\s*-?\d+(\.\d+)?\s*$",
-    "int": r"^\s*-?\d{1,9}\s*$",
-    "bigint": r"^\s*-?\d{1,18}\s*$",
     "date": r"^\d{4}-\d{2}-\d{2}$",
 }
 
 
+_INT_RANGE = {"int": (-(2**31), 2**31 - 1), "bigint": (-(2**63), 2**63 - 1)}
+
+
 def _guarded_cast(c: Column, t: str) -> Column:
-    """Cast only values that look valid, so ANSI mode never fails the job on a bad value."""
+    """Cast only values that look valid, so ANSI mode never fails the job on a bad value.
+
+    Integers go through decimal(38,0) and a range check: Airbnb ids have 19 digits.
+    """
+    if t in _INT_RANGE:
+        lo, hi = _INT_RANGE[t]
+        dec = F.when(c.rlike(r"^\s*-?\d{1,38}\s*$"), F.trim(c).cast("decimal(38,0)"))
+        return F.when(dec.between(lo, hi), dec.cast(t))
     return F.when(c.rlike(_PATTERNS[t]), c.cast(t))
 
 

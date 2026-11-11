@@ -38,3 +38,12 @@ def test_notebooks_are_databricks_source_and_thin():
         text = nb.read_text()
         assert text.startswith("# Databricks notebook source"), nb.name
         assert not re.search(r"^def |^class ", text, re.M), f"{nb.name} should only call src/airbnb"
+
+
+def test_dependencies_on_condition_tasks_name_an_outcome():
+    spec = json.loads(JOB.read_text())
+    conditions = {t["task_key"] for t in spec["tasks"] if "condition_task" in t}
+    for t in spec["tasks"]:
+        for dep in t.get("depends_on", []):
+            if dep["task_key"] in conditions:
+                assert "outcome" in dep, f"{t['task_key']} depends on condition {dep['task_key']} without outcome"
