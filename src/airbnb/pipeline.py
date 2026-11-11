@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from pyspark.sql import SparkSession
 
-from airbnb import bronze, io, silver
+from airbnb import bronze, features, gold, io, silver
 from airbnb.config import CityConfig
 from airbnb.ingest import ensure_raw_file
-from airbnb.paths import BRONZE, SILVER
+from airbnb.paths import BRONZE, GOLD_CITY, GOLD_FEATURES, GOLD_NEIGH, SILVER
 
 
 def run_city_etl(
@@ -14,7 +14,7 @@ def run_city_etl(
     c: CityConfig,
     volume_root: str,
     mode: str,
-    stages: tuple[str, ...] = ("bronze", "silver"),
+    stages: tuple[str, ...] = ("bronze", "silver", "gold", "features"),
 ) -> dict[str, int]:
     counts: dict[str, int] = {}
     if "bronze" in stages:
@@ -25,4 +25,14 @@ def run_city_etl(
         b = io.read_table(spark, BRONZE, mode).filter(f"city = '{c.name}'")
         io.write_city(silver.to_silver(b), SILVER, c.name, mode)
         counts["silver"] = io.read_table(spark, SILVER, mode).filter(f"city = '{c.name}'").count()
+    if "gold" in stages or "features" in stages:
+        s = io.read_table(spark, SILVER, mode).filter(f"city = '{c.name}'")
+    if "gold" in stages:
+        io.write_city(gold.city_metrics(s), GOLD_CITY, c.name, mode)
+        io.write_city(gold.neighbourhood_metrics(s), GOLD_NEIGH, c.name, mode)
+        counts["gold_city"] = io.read_table(spark, GOLD_CITY, mode).filter(f"city = '{c.name}'").count()
+        counts["gold_neighbourhood"] = io.read_table(spark, GOLD_NEIGH, mode).filter(f"city = '{c.name}'").count()
+    if "features" in stages:
+        io.write_city(features.build_features(s, c), GOLD_FEATURES, c.name, mode)
+        counts["features"] = io.read_table(spark, GOLD_FEATURES, mode).filter(f"city = '{c.name}'").count()
     return counts
