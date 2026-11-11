@@ -21,13 +21,31 @@ REVIEW_SCORES = ["rating", "accuracy", "cleanliness", "checkin", "communication"
 LEAK_SOURCE_COLUMNS = ["price_quote_price_per_night", "estimated_revenue_l365d", "estimated_occupancy_l365d"]
 
 
+_PATTERNS = {
+    "double": r"^\s*-?\d+(\.\d+)?\s*$",
+    "int": r"^\s*-?\d{1,9}\s*$",
+    "bigint": r"^\s*-?\d{1,18}\s*$",
+    "date": r"^\d{4}-\d{2}-\d{2}$",
+}
+
+
+def _guarded_cast(c: Column, t: str) -> Column:
+    """Cast only values that look valid, so ANSI mode never fails the job on a bad value."""
+    return F.when(c.rlike(_PATTERNS[t]), c.cast(t))
+
+
+def safe_cast(c: Column, t: str) -> Column:
+    # Column.try_cast exists from PySpark 4.0; older Databricks clients get the guarded cast.
+    return c.try_cast(t) if hasattr(Column, "try_cast") else _guarded_cast(c, t)
+
+
 def _blank_to_null(c: Column) -> Column:
     return F.when(F.trim(c) == "", None).otherwise(c)
 
 
 def parse_price(c: Column) -> Column:
     """'$1,234.00' -> 1234.0; '' or null -> null."""
-    return F.regexp_replace(_blank_to_null(c), r"[$,\s]", "").try_cast("double")
+    return safe_cast(F.regexp_replace(_blank_to_null(c), r"[$,\s]", ""), "double")
 
 
 def parse_bathrooms(c: Column) -> tuple[Column, Column]:
@@ -36,7 +54,7 @@ def parse_bathrooms(c: Column) -> tuple[Column, Column]:
     num = F.regexp_extract(t, r"^(\d+(\.\d+)?)", 1)
     baths = (
         F.when(t.isNull(), None)
-        .when(num != "", num.try_cast("double"))
+        .when(num != "", safe_cast(num, "double"))
         .when(t.contains("half-bath"), F.lit(0.5))
     )
     shared = F.when(t.isNull(), None).otherwise(t.contains("shared"))
@@ -59,7 +77,7 @@ def _bool(c: str) -> Column:
 
 
 def _num(c: str, t: str) -> Column:
-    return _blank_to_null(F.col(c)).try_cast(t)
+    return safe_cast(_blank_to_null(F.col(c)), t)
 
 
 def to_silver(bronze: DataFrame) -> DataFrame:

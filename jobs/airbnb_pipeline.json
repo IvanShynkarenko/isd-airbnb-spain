@@ -1,0 +1,59 @@
+{
+  "name": "airbnb_pipeline",
+  "description": "Team ISD: per-city ETL (bronze/silver/gold), train on training cities, score every city. Parameter `cities` = JSON list.",
+  "max_concurrent_runs": 1,
+  "queue": {"enabled": true},
+  "parameters": [
+    {"name": "cities", "default": "[\"madrid\",\"sevilla\"]"},
+    {"name": "train", "default": "true"},
+    {"name": "train_cities", "default": "[\"madrid\",\"sevilla\"]"}
+  ],
+  "tasks": [
+    {
+      "task_key": "etl_per_city",
+      "for_each_task": {
+        "inputs": "{{job.parameters.cities}}",
+        "concurrency": 1,
+        "task": {
+          "task_key": "etl_city",
+          "notebook_task": {
+            "notebook_path": "{REPO}/notebooks/01_etl_city",
+            "base_parameters": {"city": "{{input}}"},
+            "source": "WORKSPACE"
+          }
+        }
+      }
+    },
+    {
+      "task_key": "should_train",
+      "depends_on": [{"task_key": "etl_per_city"}],
+      "condition_task": {"op": "EQUAL_TO", "left": "{{job.parameters.train}}", "right": "true"}
+    },
+    {
+      "task_key": "train",
+      "depends_on": [{"task_key": "should_train", "outcome": "true"}],
+      "notebook_task": {
+        "notebook_path": "{REPO}/notebooks/06_train",
+        "base_parameters": {"train_cities": "{{job.parameters.train_cities}}"},
+        "source": "WORKSPACE"
+      }
+    },
+    {
+      "task_key": "score_per_city",
+      "depends_on": [{"task_key": "should_train"}, {"task_key": "train"}],
+      "run_if": "NONE_FAILED",
+      "for_each_task": {
+        "inputs": "{{job.parameters.cities}}",
+        "concurrency": 1,
+        "task": {
+          "task_key": "score_city",
+          "notebook_task": {
+            "notebook_path": "{REPO}/notebooks/07_score",
+            "base_parameters": {"city": "{{input}}", "train_cities": "{{job.parameters.train_cities}}"},
+            "source": "WORKSPACE"
+          }
+        }
+      }
+    }
+  ]
+}

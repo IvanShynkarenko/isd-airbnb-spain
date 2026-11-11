@@ -57,3 +57,14 @@ def test_license_class(spark):
 def test_silver_has_host_years(silver):
     assert dict(silver.dtypes)["host_years"] == "int"
     assert dict(silver.dtypes)["license_class"] == "string"
+
+
+def test_guarded_cast_without_try_cast(spark):
+    """PySpark < 4.0 (older serverless clients) has no Column.try_cast; the fallback must give the same result."""
+    from airbnb.silver import _guarded_cast
+
+    df = spark.createDataFrame([("12",), ("1.5",), ("abc",), (None,), ("2026-09-17",)], "v string")
+    assert [r[0] for r in df.select(_guarded_cast(df.v, "double")).collect()] == [12.0, 1.5, None, None, None]
+    assert [r[0] for r in df.select(_guarded_cast(df.v, "int")).collect()] == [12, None, None, None, None]
+    got = [r[0] for r in df.select(_guarded_cast(df.v, "date")).collect()]
+    assert [str(g) if g else None for g in got] == [None, None, None, None, "2026-09-17"]

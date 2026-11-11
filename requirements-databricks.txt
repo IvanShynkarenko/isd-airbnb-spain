@@ -1,0 +1,4 @@
+# Installed by the notebooks on Databricks serverless (no-op when already present)
+pyyaml>=6
+scikit-learn>=1.4,<2
+mlflow-skinny[databricks]>=2.16
