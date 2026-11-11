@@ -5,9 +5,10 @@ from airbnb.config import CityConfig, listings_url, load_cities
 CITIES_YML = Path(__file__).resolve().parents[1] / "config" / "cities.yml"
 
 
-def test_load_cities_has_madrid_and_sevilla_only():
+def test_load_cities_has_training_cities_and_barcelona():
     cities = load_cities(str(CITIES_YML))
-    assert set(cities) == {"madrid", "sevilla"}
+    assert set(cities) == {"madrid", "sevilla", "barcelona"}
+    assert cities["barcelona"].snapshot == "2026-09-17"
     assert isinstance(cities["madrid"], CityConfig)
     assert cities["madrid"].snapshot == "2026-09-17"
     assert cities["sevilla"].snapshot == "2026-09-25"

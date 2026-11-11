@@ -1,0 +1,9 @@
+WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+26/11/11 22:46:45 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[Stage 1:=============================>                             (1 + 1) / 2]                                                                                [Stage 4:>                                                          (0 + 4) / 4]                                                                                     city population    n  mae_model  mae_baseline  median_ae_model  mape_model  improvement_vs_baseline_pct model_version
+barcelona         ok 2505      79.64         85.02            47.64        0.33                         6.33         local
+barcelona all_priced 2575     121.27        125.48            49.92        0.34                         3.35         local
+EXIT 0
